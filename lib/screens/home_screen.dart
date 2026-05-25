@@ -4,66 +4,108 @@ import '../blocs/sleep_bloc.dart';
 import '../blocs/sleep_event.dart';
 import '../blocs/sleep_state.dart';
 import 'add_record_screen.dart';
+import 'stats_screen.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Трекер сна'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Трекер сна'),
+        centerTitle: true,
+      ),
       body: BlocBuilder<SleepBloc, SleepState>(
         builder: (context, state) {
           if (state is SleepLoading) {
-            return Center(child: CircularProgressIndicator());
-          } else if (state is SleepLoaded) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is SleepLoaded) {
             final records = state.records;
             if (records.isEmpty) {
-              return Center(child: Text('Нет записей. Добавьте сон!'));
+              return const Center(
+                child: Text('Нет записей. Добавьте сон!'),
+              );
             }
             return ListView.builder(
               itemCount: records.length,
-              itemBuilder: (ctx, idx) {
-                final r = records[idx];
+              itemBuilder: (context, index) {
+                final record = records[index];
                 return Dismissible(
-                  key: Key(r.bedtime.toString()),
+                  key: Key(record.bedtime.toIso8601String()),
                   background: Container(color: Colors.red),
                   onDismissed: (_) {
-                    context.read<SleepBloc>().add(DeleteRecord(idx));
+                    context.read<SleepBloc>().add(DeleteRecord(index));
                   },
                   child: Card(
-                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     child: ListTile(
-                      title: Text('Сон: ${r.duration.inHours} ч ${r.duration.inMinutes.remainder(60)} мин'),
-                      subtitle: Text('Легли: ${_formatTime(r.bedtime)} — Встали: ${_formatTime(r.wakeup)}'),
+                      title: Text(
+                        'Сон: ${record.duration.inHours} ч '
+                        '${record.duration.inMinutes.remainder(60)} мин',
+                      ),
+                      subtitle: Text(
+                        'Лёг: ${_formatTime(record.bedtime)} — '
+                        'Встал: ${_formatTime(record.wakeup)}',
+                      ),
                     ),
                   ),
                 );
               },
             );
-          } else if (state is SleepError) {
-            return Center(child: Text('Ошибка: ${state.message}'));
           }
-          return Center(child: Text('Нажмите + для добавления'));
+
+          if (state is SleepError) {
+            return Center(
+              child: Text('Ошибка: ${state.message}'),
+            );
+          }
+
+          return const Center(
+            child: Text('Нажмите + для добавления'),
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => AddRecordScreen()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AddRecordScreen()),
+          );
         },
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главная'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Статистика'),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Главная',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Статистика',
+          ),
         ],
         onTap: (index) {
           if (index == 1) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => StatsScreen()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => StatsScreen()),
+            );
           }
         },
       ),
     );
   }
 
-  String _formatTime(DateTime dt) => '${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+  String _formatTime(DateTime dt) {
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
 }

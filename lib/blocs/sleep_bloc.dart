@@ -7,13 +7,11 @@ class SleepBloc extends Bloc<SleepEvent, SleepState> {
   final SleepRepository repository;
 
   SleepBloc(this.repository) : super(SleepInitial()) {
-    // Регистрируем обработчики событий
     on<LoadRecords>(_onLoadRecords);
     on<AddRecord>(_onAddRecord);
     on<DeleteRecord>(_onDeleteRecord);
   }
 
-  // Обработчик загрузки записей
   Future<void> _onLoadRecords(LoadRecords event, Emitter<SleepState> emit) async {
     emit(SleepLoading());
     try {
@@ -24,16 +22,22 @@ class SleepBloc extends Bloc<SleepEvent, SleepState> {
     }
   }
 
-  // Обработчик добавления записи
   Future<void> _onAddRecord(AddRecord event, Emitter<SleepState> emit) async {
-    await repository.addRecord(event.record);
-    // После добавления перезагружаем список
-    add(LoadRecords());
+    try {
+      await repository.addRecord(event.record);
+      // После успешного добавления перезагружаем список
+      add(LoadRecords());
+    } catch (e) {
+      emit(SleepError(e.toString()));
+    }
   }
 
-  // Обработчик удаления записи
   Future<void> _onDeleteRecord(DeleteRecord event, Emitter<SleepState> emit) async {
-    await repository.deleteRecord(event.index);
-    add(LoadRecords());
+    try {
+      await repository.deleteRecord(event.index);
+      add(LoadRecords());
+    } catch (e) {
+      emit(SleepError(e.toString()));
+    }
   }
 }
