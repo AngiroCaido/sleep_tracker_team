@@ -1,61 +1,106 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../models/sleep_record.dart';
 import '../blocs/sleep_bloc.dart';
 import '../blocs/sleep_event.dart';
-import '../models/sleep_record.dart';
 
 class AddRecordScreen extends StatefulWidget {
+  const AddRecordScreen({super.key});
+
   @override
-  _AddRecordScreenState createState() => _AddRecordScreenState();
+  State<AddRecordScreen> createState() => _AddRecordScreenState();
 }
 
 class _AddRecordScreenState extends State<AddRecordScreen> {
   DateTime bedtime = DateTime.now();
   DateTime wakeup = DateTime.now();
 
+  // Функция для принудительного 24-часового TimePicker
+  Future<TimeOfDay?> _show24hTimePicker({
+    required BuildContext context,
+    required TimeOfDay initialTime,
+  }) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+    );
+    return picked;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Новая запись')),
+      appBar: AppBar(title: const Text('Новая запись')),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // Время отхода ко сну
             ListTile(
-              title: Text('Время начала сна'),
-              subtitle: Text('${bedtime.hour}:${bedtime.minute} ${bedtime.day}.${bedtime.month}'),
-              trailing: Icon(Icons.edit),
+              title: const Text('Время отхода ко сну'),
+              subtitle: Text(
+                  '${bedtime.hour.toString().padLeft(2, '0')}:${bedtime.minute.toString().padLeft(2, '0')} '
+                  '${bedtime.day}.${bedtime.month}.${bedtime.year}'),
+              trailing: const Icon(Icons.edit),
               onTap: () async {
-                final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(bedtime));
+                final TimeOfDay? picked = await _show24hTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.fromDateTime(bedtime),
+                );
                 if (picked != null) {
                   setState(() {
-                    bedtime = DateTime(bedtime.year, bedtime.month, bedtime.day, picked.hour, picked.minute);
+                    bedtime = DateTime(
+                      bedtime.year,
+                      bedtime.month,
+                      bedtime.day,
+                      picked.hour,
+                      picked.minute,
+                    );
                   });
                 }
               },
             ),
+            // Время пробуждения
             ListTile(
-              title: Text('Время пробуждения'),
-              subtitle: Text('${wakeup.hour}:${wakeup.minute} ${wakeup.day}.${wakeup.month}'),
-              trailing: Icon(Icons.edit),
+              title: const Text('Время пробуждения'),
+              subtitle: Text(
+                  '${wakeup.hour.toString().padLeft(2, '0')}:${wakeup.minute.toString().padLeft(2, '0')} '
+                  '${wakeup.day}.${wakeup.month}.${wakeup.year}'),
+              trailing: const Icon(Icons.edit),
               onTap: () async {
-                final picked = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(wakeup));
+                final TimeOfDay? picked = await _show24hTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.fromDateTime(wakeup),
+                );
                 if (picked != null) {
                   setState(() {
-                    wakeup = DateTime(wakeup.year, wakeup.month, wakeup.day, picked.hour, picked.minute);
+                    wakeup = DateTime(
+                      wakeup.year,
+                      wakeup.month,
+                      wakeup.day,
+                      picked.hour,
+                      picked.minute,
+                    );
                   });
                 }
               },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              child: Text('Сохранить'),
               onPressed: () {
+                final bloc = context.read<SleepBloc>();
                 final record = SleepRecord(bedtime: bedtime, wakeup: wakeup);
-                context.read<SleepBloc>().add(AddRecord(record));
+                bloc.add(AddRecord(record));
                 Navigator.pop(context);
               },
-            )
+              child: const Text('Сохранить'),
+            ),
           ],
         ),
       ),

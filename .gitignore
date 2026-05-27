@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+/build/
+.dart_tool/
+/android/
+/ios/
+/linux/
+/macos/
+/windows/
+/web/
+*.g.dart
+*.freezed.dart
